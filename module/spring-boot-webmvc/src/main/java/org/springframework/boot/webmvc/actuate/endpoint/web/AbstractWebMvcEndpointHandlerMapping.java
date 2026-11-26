@@ -20,7 +20,6 @@ import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -374,22 +373,23 @@ public abstract class AbstractWebMvcEndpointHandlerMapping extends RequestMappin
 		}
 
 		private Map<String, Object> getArguments(HttpServletRequest request, @Nullable Map<String, String> body) {
-			Map<String, Object> arguments = new LinkedHashMap<>(getTemplateVariables(request));
-			String matchAllRemainingPathSegmentsVariable = this.operation.getRequestPredicate()
-				.getMatchAllRemainingPathSegmentsVariable();
-			if (matchAllRemainingPathSegmentsVariable != null) {
-				arguments.put(matchAllRemainingPathSegmentsVariable, getRemainingPathSegments(request));
-			}
+			Map<String, Object> arguments = new LinkedHashMap<>();
+			request.getParameterMap()
+				.forEach((name, values) -> arguments.put(name, (values.length != 1) ? List.of(values) : values[0]));
+			arguments.putAll(getTemplateVariables(request));
 			if (body != null && HttpMethod.POST.name().equals(request.getMethod())) {
 				arguments.putAll(body);
 			}
-			request.getParameterMap()
-				.forEach((name, values) -> arguments.put(name,
-						(values.length != 1) ? Arrays.asList(values) : values[0]));
-			return arguments;
+			String matchAllRemainingPathSegmentsVariable = this.operation.getRequestPredicate()
+				.getMatchAllRemainingPathSegmentsVariable();
+			if (matchAllRemainingPathSegmentsVariable != null) {
+				arguments.remove(matchAllRemainingPathSegmentsVariable);
+				arguments.put(matchAllRemainingPathSegmentsVariable, getRemainingPathSegments(request));
+			}
+			return Collections.unmodifiableMap(arguments);
 		}
 
-		private Object getRemainingPathSegments(HttpServletRequest request) {
+		private String[] getRemainingPathSegments(HttpServletRequest request) {
 			String[] pathTokens = tokenize(request, HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE, true);
 			String[] patternTokens = tokenize(request, HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE, false);
 			int numberOfRemainingPathSegments = pathTokens.length - patternTokens.length + 1;

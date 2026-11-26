@@ -126,6 +126,45 @@ class MvcWebEndpointIntegrationTests
 					.isNotFound());
 	}
 
+	@Test
+	void matchAllRemainingPathsSelectorShouldNotUseQueryParameterForPath() {
+		load(MatchAllRemainingEndpointConfiguration.class,
+				(client) -> client.get()
+					.uri("/matchallremaining/?selection=one")
+					.exchange()
+					.expectStatus()
+					.isOk()
+					.expectBody()
+					.jsonPath("selection")
+					.isEqualTo(""));
+	}
+
+	@Test
+	void matchAllRemainingPathsSelectorShouldNotBeOverriddenByQueryParameter() {
+		load(MatchAllRemainingEndpointConfiguration.class,
+				(client) -> client.get()
+					.uri("/matchallremaining/one/two?selection=three")
+					.exchange()
+					.expectStatus()
+					.isOk()
+					.expectBody()
+					.jsonPath("selection")
+					.isEqualTo("one|two"));
+	}
+
+	@Test
+	void readOperationWithSelectorShouldNotBeOverriddenByQueryParameter() {
+		load(TestEndpointConfiguration.class,
+				(client) -> client.get()
+					.uri("/test/one?part=two")
+					.exchange()
+					.expectStatus()
+					.isOk()
+					.expectBody()
+					.jsonPath("part")
+					.isEqualTo("one"));
+	}
+
 	@Override
 	protected int getPort(AnnotationConfigServletWebServerApplicationContext context) {
 		return context.getWebServer().getPort();

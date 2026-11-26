@@ -773,7 +773,7 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 
 	@Configuration(proxyBeanMethods = false)
 	@Import(BaseConfiguration.class)
-	static class MatchAllRemainingEndpointConfiguration {
+	protected static class MatchAllRemainingEndpointConfiguration {
 
 		@Bean
 		MatchAllRemainingEndpoint matchAllRemainingEndpoint() {
