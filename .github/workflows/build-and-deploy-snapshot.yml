@@ -1,9 +1,6 @@
 name: Build and Deploy Snapshot
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - '4.0.x'
 permissions:
   contents: read
 concurrency:
